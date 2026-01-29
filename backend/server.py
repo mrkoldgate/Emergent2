@@ -387,15 +387,15 @@ def create_moltbot_config(token: str, api_key: str = None):
         }
     }
     
-    # Emergent provider config
+    # Emergent provider config - model IDs without provider prefix
     emergent_provider = {
         "baseUrl": emergent_base_url,
         "apiKey": emergent_key,
         "api": "openai-completions",
         "models": [
             {
-                "id": "openai/gpt-5.2",
-                "name": "openai/gpt-5.2",
+                "id": "gpt-5.2",
+                "name": "GPT-5.2",
                 "reasoning": True,
                 "input": ["text"],
                 "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
@@ -403,8 +403,8 @@ def create_moltbot_config(token: str, api_key: str = None):
                 "maxTokens": 128000
             },
             {
-                "id": "anthropic/claude-sonnet-4-5",
-                "name": "anthropic/claude-sonnet-4-5",
+                "id": "claude-sonnet-4-5",
+                "name": "Claude Sonnet 4.5",
                 "reasoning": True,
                 "input": ["text"],
                 "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
