@@ -368,6 +368,9 @@ def main():
     print("\n--- Legacy Endpoints Tests ---")
     tester.test_legacy_status_endpoints()
     
+    print("\n--- Ownership & Access Control Tests ---")
+    tester.test_ownership_access_control(owner_token, other_token)
+    
     print("\n--- Logout Test ---")
     tester.test_logout(owner_token)
     
