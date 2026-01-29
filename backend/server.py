@@ -443,16 +443,20 @@ async def start_gateway_process(api_key: str, provider: str, owner_user_id: str)
         gateway_state["process"] = None
         gateway_state["pid"] = None
     
-    # Generate token and create config
+    # Generate token and create config with Emergent provider
     token = generate_token()
-    create_moltbot_config(token)
+    create_moltbot_config(token, api_key)
     
     # Set environment variables
     env = os.environ.copy()
-    if provider == "anthropic":
+    
+    # For Emergent provider, the API key is in the config file
+    # For legacy providers, set the environment variable
+    if provider == "anthropic" and api_key:
         env["ANTHROPIC_API_KEY"] = api_key
-    elif provider == "openai":
+    elif provider == "openai" and api_key:
         env["OPENAI_API_KEY"] = api_key
+    # Emergent provider uses config file, no env var needed
     
     # Set gateway token for auth
     env["CLAWDBOT_GATEWAY_TOKEN"] = token
@@ -470,11 +474,11 @@ async def start_gateway_process(api_key: str, provider: str, owner_user_id: str)
         if not clawdbot_cmd:
             raise HTTPException(status_code=500, detail="Failed to find clawdbot after installation")
     
-    # Start the gateway
+    # Start the gateway with config file
     logger.info(f"Starting Moltbot gateway on port {MOLTBOT_PORT} using {clawdbot_cmd}...")
     
     process = subprocess.Popen(
-        [clawdbot_cmd, "gateway", "--port", str(MOLTBOT_PORT), "--bind", "lan", "--token", token, "--allow-unconfigured"],
+        [clawdbot_cmd, "gateway", "--port", str(MOLTBOT_PORT), "--bind", "lan", "--token", token, "--allow-unconfigured", "--config", CONFIG_FILE],
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
