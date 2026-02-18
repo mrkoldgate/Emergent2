@@ -1,16 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ContentView } from "@/components/content-view";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+
+// Mock content drafts
+const mockDrafts = [
+  { _id: "1", title: "AI Agents in 2026: The Complete Guide", content: "Introduction to autonomous AI agents and how they're transforming productivity...", platform: "blog", status: "draft" as const, createdAt: Date.now() },
+  { _id: "2", title: "Thread: Building with OpenClaw", content: "1/ Just shipped my first autonomous agent with @OpenClaw. Here's what I learned...", platform: "twitter", status: "review" as const, createdAt: Date.now() - 86400000 },
+  { _id: "3", title: "OpenClaw Setup Tutorial", content: "In this video, I'll walk you through setting up OpenClaw from scratch...", platform: "youtube", status: "approved" as const, scheduledFor: Date.now() + 2 * 86400000, createdAt: Date.now() - 2 * 86400000 },
+  { _id: "4", title: "Daily AI Digest #47", content: "Today's top stories: GPT-5.2 updates, new Claude features, and more...", platform: "newsletter", status: "published" as const, publishedAt: Date.now() - 86400000, createdAt: Date.now() - 2 * 86400000 },
+  { _id: "5", title: "Agent Memory Deep Dive", content: "Understanding how OpenClaw manages long-term memory...", platform: "blog", status: "draft" as const, createdAt: Date.now() - 3 * 86400000 },
+];
 
 export default function ContentPage() {
-  const drafts = useQuery(api.contentDrafts.list, {}) || [];
-  const updateDraft = useMutation(api.contentDrafts.update);
+  const [drafts, setDrafts] = useState(mockDrafts);
 
   const handleUpdateStatus = async (id: string, status: string) => {
-    await updateDraft({ id: id as any, status });
+    setDrafts((prev) =>
+      prev.map((d) => (d._id === id ? { ...d, status: status as any } : d))
+    );
   };
 
   return (
@@ -19,7 +28,6 @@ export default function ContentPage() {
       animate={{ opacity: 1 }}
       className="space-y-6"
     >
-      {/* Header */}
       <div>
         <h1 className="text-xl font-semibold text-white/90">Content</h1>
         <p className="text-sm text-white/50 mt-0.5">
@@ -27,7 +35,6 @@ export default function ContentPage() {
         </p>
       </div>
 
-      {/* Content Kanban */}
       <ContentView drafts={drafts} onUpdateStatus={handleUpdateStatus} />
     </motion.div>
   );
