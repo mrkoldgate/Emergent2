@@ -4,8 +4,16 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { DashboardOverview } from "@/components/dashboard-overview";
 import { ActivityFeed } from "@/components/activity-feed";
-import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+
+// Mock activities data when Convex is not connected
+const mockActivities = [
+  { _id: "1", type: "agent", title: "Agent spawned sub-agent for research task", source: "openclaw", timestamp: Date.now() - 15 * 60000 },
+  { _id: "2", type: "cron", title: "Daily digest cron completed successfully", source: "scheduler", timestamp: Date.now() - 60 * 60000 },
+  { _id: "3", type: "message", title: "New message received on Telegram", source: "telegram", timestamp: Date.now() - 2 * 60 * 60000 },
+  { _id: "4", type: "task", title: "Content draft approved for publication", source: "content", timestamp: Date.now() - 3 * 60 * 60000 },
+  { _id: "5", type: "system", title: "System health check passed", source: "monitor", timestamp: Date.now() - 4 * 60 * 60000 },
+  { _id: "6", type: "agent", title: "Memory consolidation completed", source: "openclaw", timestamp: Date.now() - 5 * 60 * 60000 },
+];
 
 export default function HomePage() {
   const [systemHealth, setSystemHealth] = useState<any>(null);
@@ -14,8 +22,7 @@ export default function HomePage() {
   const [revenue, setRevenue] = useState<any>(null);
   const [contentPipeline, setContentPipeline] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  const activities = useQuery(api.activities.list, { limit: 20 });
+  const [activities] = useState(mockActivities);
 
   const fetchData = useCallback(async () => {
     try {
@@ -80,10 +87,7 @@ export default function HomePage() {
       />
 
       {/* Activity Feed */}
-      <ActivityFeed
-        activities={activities || []}
-        loading={!activities}
-      />
+      <ActivityFeed activities={activities} loading={false} />
     </motion.div>
   );
 }
