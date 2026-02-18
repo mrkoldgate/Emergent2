@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { TabBar } from "@/components/tab-bar";
@@ -9,8 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
 import { MessageSquare, Terminal, Play, Loader2 } from "lucide-react";
 
 const tabs = [
@@ -27,22 +25,30 @@ const quickCommands = [
   { label: "Restart agent", command: "/agent restart" },
 ];
 
+// Mock data
+const mockSessions = [
+  { _id: "1", title: "General Assistant", channel: "webchat", lastMessage: "I've compiled the content metrics report...", messageCount: 4, updatedAt: Date.now() - 60 * 60 * 1000 },
+  { _id: "2", title: "Research Session", channel: "telegram", lastMessage: "Found 5 relevant articles on AI agents", messageCount: 12, updatedAt: Date.now() - 2 * 60 * 60 * 1000 },
+  { _id: "3", title: "Code Review", channel: "discord", lastMessage: "The PR looks good, approved!", messageCount: 8, updatedAt: Date.now() - 24 * 60 * 60 * 1000 },
+];
+
+const mockMessages = [
+  { _id: "1", role: "user" as const, content: "What's on my schedule today?", channel: "webchat", timestamp: Date.now() - 2 * 60 * 60 * 1000 },
+  { _id: "2", role: "assistant" as const, content: "You have a team standup in 2 hours and a content review session tomorrow. Would you like me to prepare any materials?", channel: "webchat", timestamp: Date.now() - 2 * 60 * 60 * 1000 + 5000 },
+  { _id: "3", role: "user" as const, content: "Yes, prepare the content metrics report", channel: "webchat", timestamp: Date.now() - 60 * 60 * 1000 },
+  { _id: "4", role: "assistant" as const, content: "I've compiled the content metrics report. Key highlights: 15% increase in engagement this week, 3 new drafts pending review, and the newsletter open rate improved to 42%.", channel: "webchat", timestamp: Date.now() - 60 * 60 * 1000 + 8000 },
+];
+
 export default function ChatPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const activeTab = searchParams.get("tab") || "chat";
 
-  const [activeSessionId, setActiveSessionId] = useState<string>("");
+  const [activeSessionId, setActiveSessionId] = useState<string>("1");
   const [commandInput, setCommandInput] = useState("");
   const [commandOutput, setCommandOutput] = useState<string[]>([]);
   const [isRunning, setIsRunning] = useState(false);
-
-  const sessions = useQuery(api.chat.listSessions, {}) || [];
-  const messages = useQuery(
-    api.chat.getMessages,
-    activeSessionId ? { sessionId: activeSessionId } : "skip"
-  ) || [];
-  const sendMessage = useMutation(api.chat.sendMessage);
+  const [messages, setMessages] = useState(mockMessages);
 
   const handleTabChange = (tabId: string) => {
     router.push(`/chat?tab=${tabId}`);
@@ -53,13 +59,26 @@ export default function ChatPage() {
   };
 
   const handleSendMessage = async (content: string) => {
-    if (!activeSessionId) return;
-    await sendMessage({
-      sessionId: activeSessionId,
-      role: "user",
+    const newMessage = {
+      _id: String(messages.length + 1),
+      role: "user" as const,
       content,
       channel: "webchat",
-    });
+      timestamp: Date.now(),
+    };
+    setMessages([...messages, newMessage]);
+    
+    // Simulate response
+    setTimeout(() => {
+      const response = {
+        _id: String(messages.length + 2),
+        role: "assistant" as const,
+        content: "I've received your message and I'm processing it. Is there anything specific you'd like me to help with?",
+        channel: "webchat",
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, response]);
+    }, 1000);
   };
 
   const handleRunCommand = async (cmd?: string) => {
@@ -69,7 +88,6 @@ export default function ChatPage() {
     setIsRunning(true);
     setCommandOutput((prev) => [...prev, `> ${command}`, "Running..."]);
 
-    // Simulate command execution
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     const responses: Record<string, string> = {
@@ -93,7 +111,6 @@ export default function ChatPage() {
       animate={{ opacity: 1 }}
       className="space-y-6"
     >
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-white/90">Chat</h1>
@@ -104,10 +121,9 @@ export default function ChatPage() {
         <TabBar tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
 
-      {/* Tab Content */}
       {activeTab === "chat" && (
         <ChatCenterView
-          sessions={sessions}
+          sessions={mockSessions}
           messages={messages}
           activeSessionId={activeSessionId}
           onSelectSession={handleSelectSession}
@@ -117,7 +133,6 @@ export default function ChatPage() {
 
       {activeTab === "command" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Command Terminal */}
           <Card className="lg:col-span-2 h-[calc(100vh-200px)] flex flex-col">
             <CardHeader className="border-b border-white/[0.06]">
               <CardTitle className="flex items-center gap-2">
@@ -126,7 +141,6 @@ export default function ChatPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 p-0 flex flex-col">
-              {/* Output */}
               <div className="flex-1 p-4 font-mono text-xs overflow-auto bg-black/50">
                 {commandOutput.length === 0 ? (
                   <div className="text-white/30">
@@ -150,7 +164,6 @@ export default function ChatPage() {
                 )}
               </div>
 
-              {/* Input */}
               <div className="p-4 border-t border-white/[0.06]">
                 <div className="flex gap-2">
                   <div className="flex-1 relative">
@@ -182,7 +195,6 @@ export default function ChatPage() {
             </CardContent>
           </Card>
 
-          {/* Quick Commands */}
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">Quick Commands</CardTitle>

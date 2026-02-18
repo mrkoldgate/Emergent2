@@ -7,14 +7,19 @@ import { TabBar } from "@/components/tab-bar";
 import { OpsView } from "@/components/ops-view";
 import { SuggestedTasksView } from "@/components/suggested-tasks-view";
 import { CalendarView } from "@/components/calendar-view";
-import { useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
 import { Settings2, ListTodo, Calendar } from "lucide-react";
 
 const tabs = [
   { id: "operations", label: "Operations", icon: <Settings2 className="h-3.5 w-3.5" /> },
   { id: "tasks", label: "Tasks", icon: <ListTodo className="h-3.5 w-3.5" /> },
   { id: "calendar", label: "Calendar", icon: <Calendar className="h-3.5 w-3.5" /> },
+];
+
+// Mock calendar events
+const mockCalendarEvents = [
+  { _id: "1", title: "Team Standup", start: Date.now() + 2 * 60 * 60 * 1000, end: Date.now() + 2.5 * 60 * 60 * 1000, type: "meeting", color: "#3B82F6" },
+  { _id: "2", title: "Content Review", start: Date.now() + 24 * 60 * 60 * 1000, end: Date.now() + 25 * 60 * 60 * 1000, type: "task", color: "#8B5CF6" },
+  { _id: "3", title: "Agent Maintenance", start: Date.now() + 48 * 60 * 60 * 1000, end: Date.now() + 50 * 60 * 60 * 1000, type: "maintenance", color: "#F59E0B" },
 ];
 
 export default function OpsPage() {
@@ -27,8 +32,7 @@ export default function OpsPage() {
   const [observations, setObservations] = useState<any[]>([]);
   const [priorities, setPriorities] = useState<any[]>([]);
   const [suggestedTasks, setSuggestedTasks] = useState<any[]>([]);
-
-  const calendarEvents = useQuery(api.calendarEvents.list, {});
+  const [calendarEvents] = useState(mockCalendarEvents);
 
   const fetchOpsData = useCallback(async () => {
     try {
@@ -47,7 +51,6 @@ export default function OpsPage() {
 
       setSuggestedTasks(tasksRes.tasks || []);
 
-      // Mock data for branch status, observations, priorities
       setBranchStatus([
         { repo: "openclaw-dashboard", branch: "main", ahead: 0, behind: 0, dirty: false },
         { repo: "agent-memory", branch: "feature/compression", ahead: 3, behind: 1, dirty: true },
@@ -103,7 +106,6 @@ export default function OpsPage() {
       animate={{ opacity: 1 }}
       className="space-y-6"
     >
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-white/90">Operations</h1>
@@ -114,7 +116,6 @@ export default function OpsPage() {
         <TabBar tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
 
-      {/* Tab Content */}
       {activeTab === "operations" && (
         <OpsView
           serverHealth={serverHealth}
@@ -132,9 +133,7 @@ export default function OpsPage() {
         />
       )}
 
-      {activeTab === "calendar" && (
-        <CalendarView events={calendarEvents || []} />
-      )}
+      {activeTab === "calendar" && <CalendarView events={calendarEvents} />}
     </motion.div>
   );
 }
